@@ -5,11 +5,15 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
+import { createGame, findGame, playerJoin } from '@/game/gameUtils';
 
 export default function Home() {
     const inputClass = "bg-transparent py-2 px-4 border-4 border-amber-500 placeholder-amber-100 text-lg font-bold rounded-xl outline-none focus:bg-amber-600 focus:placeholder-white transition";
     const buttonClass = "py-2 px-4 text-lg font-bold rounded-xl transition";
 
+    const router = useRouter();
     const [loading, setLoading] = useState(0);
 
     const [ nickname, setNickname ] = useState('');
@@ -29,11 +33,40 @@ export default function Home() {
         return true;
     };
 
-    const handleAction = (type) => {
+    const handleAction = async (type) => {
         if (!checkNickname()) {
             return;
         }
+
         setLoading(type);
+        let id;
+
+        switch (type) {
+            case 1: { // Start a new game
+                id = await createGame(false);
+                setLoading(0);
+                break;
+            }
+            case 2: { // Find a game
+                id = await findGame();
+                setLoading(0);
+                break;
+            }
+        }
+
+        if (id === null) {
+            notifyError('Something went wrong. Try again.');
+            return;
+        }
+
+        const joinGame = await playerJoin(id, nickname);
+        if (joinGame.error) {
+            notifyError(joinGame.error);
+        } else if (joinGame === false) {
+            notifyError('Something went wrong. Try again.');
+        } else {
+            router.push(`/game/${id}`);
+        }
     };
 
     return (
@@ -57,15 +90,9 @@ export default function Home() {
                     </button>
                     <button
                         className={`border-4 border-green-500 bg-green-500 hover:bg-green-600 ${buttonClass}`}
-                        onClick={() => handleAction(2)}
-                    >
-                        { loading === 2 ? 'Joining game...' : 'Join a game' }
-                    </button>
-                    <button
-                        className={`border-4 border-cyan-500 bg-cyan-500 hover:bg-cyan-600 ${buttonClass}`}
                         onClick={() => handleAction(3)}
                     >
-                        { loading === 3 ? 'Finding game...' : 'Find a game' }
+                        { loading === 2 ? 'Finding game...' : 'Find a game' }
                     </button>
                 </div>
             </div>
