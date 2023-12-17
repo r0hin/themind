@@ -63,13 +63,13 @@ export const findGame = async () => {
         where('in_progress', '==', false),
         where('public', '==', true),
     ];
-    const result = await searchDocuments('games', conditions);
+    const results = await searchDocuments('games', conditions);
 
     let gameId;
-    if (result.length === 0) {
+    if (results.length === 0) {
         gameId = await createGame(true);
     } else {
-        gameId = result[0].id;
+        gameId = results[0].id;
     }
 
     return gameId;

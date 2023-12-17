@@ -90,7 +90,7 @@ export default function Home() {
                     </button>
                     <button
                         className={`border-4 border-green-500 bg-green-500 hover:bg-green-600 ${buttonClass}`}
-                        onClick={() => handleAction(3)}
+                        onClick={() => handleAction(2)}
                     >
                         { loading === 2 ? 'Finding game...' : 'Find a game' }
                     </button>
