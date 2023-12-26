@@ -1,0 +1,47 @@
+
+      {/* Display when the game is waiting for players */}
+      {game?.data().status === 0 ? (
+        <div>
+          <p>ID: {game.id}</p>
+          <p>Waiting for players...</p>
+          <p>Starting in {timeLeft > 0 ? timeLeft : 0} seconds.</p>
+
+          <button className={`${BUTTON_CLASS} mt-2`} onClick={handleReady}>
+            {game.data().playersSummary[player - 1].ready ? 'Unready' : 'Ready'}
+          </button>
+
+          <ul className={BORDER_CLASS + " mt-2"}>
+            {game.data().playersSummary
+              .filter((player) => player !== null)
+              .map((player, index) => (
+                <li key={index}>{player.nickname} {player.ready ? (<span className="text-green-500">Ready</span>) : (<span className="text-red-500">Not ready</span>)}</li>
+              ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* Display when the game is in progress or has ended */}
+      {game?.data().status > 0 ? (
+        <div>
+          <p>
+            Your card number is {game.data().playersSummary[player - 1].number}.
+          </p>
+          <p>Ends in {timeLeft > 0 ? timeLeft : 0} seconds.</p>
+
+          {game.data().status > 1 ? (
+            <p>
+              Result: {game.data().status === 2 ? (<span className="text-green-500">Win</span>) : (<span className="text-red-500">Lose</span>)}
+            </p>
+          ) : null}
+
+          <button className={`${BUTTON_CLASS} mt-2`} onClick={handlePlace}>
+            Place
+          </button>
+
+          <ul className={BORDER_CLASS + " mt-2"}>
+            {game.data().places.map((place, index) => (
+              <li key={index}>{`${game.data().playersSummary[place].nickname} placed card.`}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}

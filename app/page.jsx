@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import Image from 'next/image';
+
 import { subscribeToAuthChanges } from '@/utils/auth';
 import {
   findGame,
@@ -13,15 +19,14 @@ import {
   ready
 } from '@/utils/game';
 import { getTimestamp } from '@/utils/date';
- 
-const BUTTON_CLASS = "bg-sky-500 p-2 rounded text-white";
-const BORDER_CLASS = "border p-2 rounded focus:outline-0 focus:border-green-500 transition";
+
+const inputClass = "bg-transparent py-2 px-4 border-4 border-amber-500 placeholder-amber-100 text-lg font-bold rounded-xl outline-none focus:bg-amber-600 focus:placeholder-white transition";
+const buttonClass = "py-2 px-4 text-lg font-bold rounded-xl transition";
 
 export default function Home() {
   const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(0);
-  const [errorMessage, setErrorMessage] = useState('');
 
   const [nickname, setNickname] = useState('');
   const [joinId, setJoinId] = useState('');
@@ -39,15 +44,19 @@ export default function Home() {
     setJoinId(e.target.value);
   };
 
+  const notifyError = (message) => {
+    toast.error(message);
+  };
+
   const handleAction = async (type) => {
     if (!user) {
-      setErrorMessage('Anonymous login failed. Refresh or try again later.');
+      notifyError('Anonymous login failed. Refresh or try again later.');
       return;
     }
 
     // Check if a nickname is provided
     if (nickname === '') {
-      setErrorMessage('Enter a nickname.');
+      notifyError('Enter a nickname.');
       return;
     }
 
@@ -70,7 +79,7 @@ export default function Home() {
       }
       case 3: { // Join game by ID
         if (joinId === '') {
-          setErrorMessage('Provide a Game ID.');
+          notifyError('Provide a Game ID.');
           setLoading(0);
           return;
         }
@@ -93,7 +102,7 @@ export default function Home() {
         }
       } else {
         if (joinedPlayer.error) {
-          setErrorMessage(joinedPlayer.error);
+          notifyError(joinedPlayer.error);
           setLoading(0);
           return;
         } else {
@@ -119,7 +128,6 @@ export default function Home() {
 
   const reset = () => {
     setLoading(0);
-    setErrorMessage('');
 
     setNickname('');
     setJoinId('');
@@ -176,89 +184,58 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="m-2">
+    <>
       {game === null ? (
         <div>
-          <input
-            type="text"
-            placeholder="Nickname"
-            className={BORDER_CLASS}
-            onKeyUp={handleNicknameChange}
-          />
+          <Image src="/logo.png" width="437" height="173" alt="The Mind" className="mx-auto" />
 
-          <div className="mt-2 space-x-2">
-            <button className={BUTTON_CLASS} onClick={() => handleAction(1)}>
-              {loading === 1 ? 'Finding a game...' : 'Find a game'}
-            </button>
+          <div className="w-full max-w-[25rem] px-6 mt-16">
+              <div className="flex flex-col space-y-3">
+                  <input
+                      type="text"
+                      placeholder="Nickname"
+                      className={inputClass}
+                      onKeyUp={handleNicknameChange}
+                  />
 
-            <button className={BUTTON_CLASS + ' !bg-red-500 mt-2'} onClick={() => handleAction(2)}>
-              {loading === 2 ? 'Starting a new game...' : 'Start a new game'}
-            </button>
+                  <button
+                      className={`border-4 border-red-500 bg-red-500 hover:bg-red-600 ${buttonClass}`}
+                      onClick={() => handleAction(1)}
+                  >
+                      { loading === 1 ? 'Creating new game...' : 'Start a new game' }
+                  </button>
+                  <button
+                      className={`border-4 border-green-500 bg-green-500 hover:bg-green-600 ${buttonClass}`}
+                      onClick={() => handleAction(2)}
+                  >
+                      { loading === 2 ? 'Finding game...' : 'Find a game' }
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Game ID"
+                      className={`${inputClass} border-sky-500 placeholder-sky-100 focus:bg-sky-600`}
+                      onKeyUp={handleJoinIdChange}
+                    />
+                    <button
+                      className={`border-4 border-sky-500 bg-sky-500 hover:bg-sky-600 ${buttonClass}`}
+                      onClick={() => handleAction(3)}
+                    >
+                      {loading === 3 ? 'Joining game...' : 'Join a game'}
+                    </button>
+                  </div>
+              </div>
           </div>
-
-          <div className='mt-2 space-x-2'>
-            <input
-              type="text"
-              placeholder="Game ID"
-              className={BORDER_CLASS}
-              onKeyUp={handleJoinIdChange}
-            />
-
-            <button className={BUTTON_CLASS + ' !bg-green-500 mt-2'} onClick={() => handleAction(3)}>
-              {loading === 3 ? 'Joining the game...' : 'Join a game'}
-            </button>
-          </div>
-
-          {errorMessage && <p className="mt-2 text-red-500">{errorMessage}</p>}
         </div>
       ) : null}
 
-      {/* Display when the game is waiting for players */}
-      {game?.data().status === 0 ? (
-        <div>
-          <p>ID: {game.id}</p>
-          <p>Waiting for players...</p>
-          <p>Starting in {timeLeft > 0 ? timeLeft : 0} seconds.</p>
-
-          <button className={`${BUTTON_CLASS} mt-2`} onClick={handleReady}>
-            {game.data().playersSummary[player - 1].ready ? 'Unready' : 'Ready'}
-          </button>
-
-          <ul className={BORDER_CLASS + " mt-2"}>
-            {game.data().playersSummary
-              .filter((player) => player !== null)
-              .map((player, index) => (
-                <li key={index}>{player.nickname} {player.ready ? (<span className="text-green-500">Ready</span>) : (<span className="text-red-500">Not ready</span>)}</li>
-              ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {/* Display when the game is in progress or has ended */}
-      {game?.data().status > 0 ? (
-        <div>
-          <p>
-            Your card number is {game.data().playersSummary[player - 1].number}.
-          </p>
-          <p>Ends in {timeLeft > 0 ? timeLeft : 0} seconds.</p>
-
-          {game.data().status > 1 ? (
-            <p>
-              Result: {game.data().status === 2 ? (<span className="text-green-500">Win</span>) : (<span className="text-red-500">Lose</span>)}
-            </p>
-          ) : null}
-
-          <button className={`${BUTTON_CLASS} mt-2`} onClick={handlePlace}>
-            Place
-          </button>
-
-          <ul className={BORDER_CLASS + " mt-2"}>
-            {game.data().places.map((place, index) => (
-              <li key={index}>{`${game.data().playersSummary[place].nickname} placed card.`}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </div>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        draggable={false}
+        theme="dark"
+      />
+    </>
   );
 }
