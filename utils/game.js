@@ -29,13 +29,13 @@ export const createGame = async (isPublic = true) => {
   const createdAt = await getTimestamp();
 
   const docRef = await addDoc(collection(db, 'games'), {
-    public: isPublic,
-    status: 0,
+    public: Boolean(isPublic),
+    status: Number(0),
     players: Array(),
     playersSummary: Array(4).fill(null),
     places: Array(),
-    timerTo: 0,
-    createdAt
+    timerTo: Number(0),
+    createdAt: Number(createdAt)
   });
 
   return docRef.id;
@@ -196,7 +196,7 @@ export const ready = async (game, player) => {
   // Check if all players are ready
   const allPlayersReady = data.playersSummary.filter(player => player !== null).every(player => player.ready);
 
-  if (allPlayersReady && data.players.length >= 2 && data.timerTo - await getTimestamp() > 5) {
+  if (allPlayersReady && data.players.length >= 2 && data.timerTo - await getTimestamp() > 10) {
     data.timerTo = await getTimestamp() + 10;
   }
 

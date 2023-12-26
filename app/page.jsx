@@ -5,6 +5,9 @@ import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { CiUser } from 'react-icons/ci';
+import { GoClock } from 'react-icons/go';
+
 import Image from 'next/image';
 
 import { subscribeToAuthChanges } from '@/utils/auth';
@@ -59,22 +62,25 @@ export default function Home() {
       notifyError('Enter a nickname.');
       return;
     }
+    if (nickname.length > 12) {
+      notifyError('The nickname must not exceed 12 characters.');
+      return;
+    }
 
     setLoading(type);
 
     let gameId;
 
     switch (type) {
-      case 1: { // Find a game
+      case 1: { // Start a new game
+        gameId = await createGame(false);
+        break;
+      }
+      case 2: { // Find a game
         gameId = await findGame();
-
         if (gameId === null) {
           gameId = await createGame(true);
         }
-        break;
-      }
-      case 2: { // Start a new game
-        gameId = await createGame(false);
         break;
       }
       case 3: { // Join game by ID
@@ -94,7 +100,7 @@ export default function Home() {
     while (true) {
       joinedPlayer = await joinGame(gameId, nickname, setTimeLeft, user);
       
-      if (type === 1) {
+      if (type === 2) {
         if (joinedPlayer.error) {
           gameId = await createGame(true);
         } else {
@@ -228,6 +234,41 @@ export default function Home() {
               </div>
           </div>
         </div>
+      ) : null}
+
+      {/* Display when the game is waiting for players */}
+      {game?.data().status === 0 ? (
+      <div className="space-y-16">
+        <h1 className="text-5xl text-center font-black">Waiting for players...</h1>
+
+        <ul className="grid grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+          {game.data().playersSummary.filter((player) => player !== null)
+            .map((player, index) => (
+              <li key={index} className="text-center">
+                <CiUser className="text-6xl p-2 bg-slate-800 rounded-full inline-block" />
+                <p className="text-lg mt-2">
+                  {player.nickname}
+                </p>
+              </li>
+            ))}
+        </ul>
+
+        <div className="flex flex-col items-center space-y-10">
+          <button
+            className={`border-4 ${game.data().playersSummary[player - 1].ready ? 'border-red-500 bg-red-500 hover:bg-red-600' : 'border-sky-500 bg-sky-500 hover:bg-sky-600'} ${buttonClass}`}
+            onClick={() => handleReady()}
+          >
+            {game.data().playersSummary[player - 1].ready ? 'Unready' : 'Ready'}
+          </button>
+
+          <p className="border border-slate-900 py-2 px-4">Game ID: {game.id}</p>
+
+          <div className="text-5xl flex justify-center items-center space-x-4">
+            <GoClock />
+            <span className="font-black">{timeLeft > 0 ? timeLeft : 0}</span>
+          </div>
+        </div>
+      </div>
       ) : null}
 
       <ToastContainer
