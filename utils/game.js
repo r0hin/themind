@@ -63,9 +63,9 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
   }
 
   // Check if the user's UID is already in the players array
-  /*if (data.players.includes(user?.uid)) {
+  if (data.players.includes(user?.uid)) {
     return { error: 'You are already in this game.' };
-  }*/
+  }
 
   // Find an empty player slot
   const emptyPlayerSlotIndex = data.playersSummary.findIndex(player => player === null);
