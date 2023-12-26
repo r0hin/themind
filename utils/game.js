@@ -63,9 +63,9 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
   }
 
   // Check if the user's UID is already in the players array
-  if (data.players.includes(user?.uid)) {
+  /*if (data.players.includes(user?.uid)) {
     return { error: 'You are already in this game.' };
-  }
+  }*/
 
   // Find an empty player slot
   const emptyPlayerSlotIndex = data.playersSummary.findIndex(player => player === null);
@@ -148,11 +148,11 @@ export const placeCard = async (game, player) => {
   const data = game.data();
   const docRef = doc(db, 'games', id);
 
-  if (data.status > 1) return;
+  const playerIndex = player - 1;
 
-  if (data.places.includes(player - 1)) return;
+  if (data.places.includes(playerIndex)) return;
 
-  data.places.push(player - 1);
+  data.places.push(playerIndex);
 
   if (data.places.length === data.players.length) {
     data.status = ascendingOrder(data) ? 2 : 3;
@@ -162,15 +162,15 @@ export const placeCard = async (game, player) => {
   await updateDoc(docRef, data);
 
   if (data.status > 1) {
-    await stopGame(id);
+    await stopGame(game);
   }
 }
 
-export const stopGame = async (game) => {
+export const stopGame = async (game, timeLeft = false) => {
   const id = game.id;
   const data = game.data();
 
-  if (data.status === 1) {
+  if (timeLeft) {
     const docRef = doc(db, 'games', id);
 
     data.status = ascendingOrder(data) ? 2 : 3;

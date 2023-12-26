@@ -158,7 +158,7 @@ export default function Home() {
           if (game.data().status === 0) {
             await startGame(game);
           } else if (game.data().status === 1) { // Time left
-            await stopGame(game);
+            await stopGame(game, true);
           }
 
           clearInterval(interval);
@@ -269,6 +269,45 @@ export default function Home() {
           </div>
         </div>
       </div>
+      ) : null}
+
+      {/* Display when the game is in progress or has ended */}
+      {game?.data().status > 0 ? (
+        <div className="space-y-16">
+          <h1 className="text-5xl text-center font-black">Place when you feel it's the right time.</h1>
+
+          {game.data().status > 1 ? (
+              game.data().status === 2 ? (
+                <h3 className="text-4xl text-green-500 text-center font-black">You Win</h3>
+              ) : (
+                <h3 className="text-4xl text-red-500 text-center font-black">You Lose</h3>
+              )
+            ) : (
+              <h3 className="text-3xl text-center">Your card is {game.data().playersSummary[player - 1].number}.</h3>
+            )}
+
+          <div className="flex flex-col items-center space-y-6">
+            <button
+              className={`border-4 border-sky-500 bg-sky-500 hover:bg-sky-600 ${buttonClass}`}
+              onClick={() => handlePlace()}
+            >
+              Place
+            </button>
+
+            {game.data().places.length > 0 ? (
+              <ul className="border border-slate-900 py-2 px-4 text-center">
+                {game.data().places.map((place, index) => (
+                  <li key={index}>{`${game.data().playersSummary[place].nickname} placed card.`}</li>
+                ))}
+              </ul>
+            ) : null}
+
+            <div className="text-5xl flex justify-center items-center space-x-4">
+              <GoClock />
+              <span className="font-black">{timeLeft > 0 ? timeLeft : 0}</span>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       <ToastContainer
