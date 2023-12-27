@@ -62,8 +62,12 @@ export default function Home() {
       notifyError('Enter a nickname.');
       return;
     }
-    if (nickname.length > 12) {
+    else if (nickname.length > 12) {
       notifyError('The nickname must not exceed 12 characters.');
+      return;
+    }
+    else if (!/^[A-Za-z0-9]+$/.test(nickname)) {
+      notifyError('The nickname can contain only letters and numbers.')
       return;
     }
 
@@ -128,8 +132,8 @@ export default function Home() {
     await ready(game, player);
   };
 
-  const handlePlace = async () => {
-    await placeCard(game, player);
+  const handlePlace = async (number) => {
+    await placeCard(game, player, number);
   };
 
   const reset = () => {
@@ -273,23 +277,27 @@ export default function Home() {
 
       {/* Display when the game is in progress or has ended */}
       {game?.data().status > 0 ? (
-        <div className="space-y-16">
-          <h1 className="text-5xl text-center font-black">Place when you feel it's the right time.</h1>
+        <div className="space-y-10">
+          <h1 className="text-5xl text-center font-black">Click right time to place.</h1>
 
-          <h3 className="text-3xl text-center">Your card is {game.data().playersSummary[player - 1].number}.</h3>
+          <div className="space-y-3">
+          {game.data().playersSummary[player - 1].numbers
+            .filter(number => !game.data().places.some(place => place.number === number))
+            .map((number, index) => (
+              <h3 key={index} className="text-3xl text-sky-500 text-center cursor-pointer" onClick={() => handlePlace(number)}>
+                This card's number is {number}.
+              </h3>
+            ))}
+          </div>
 
-          <div className="flex flex-col items-center space-y-6">
-            <button
-              className={`border-4 border-sky-500 bg-sky-500 hover:bg-sky-600 ${buttonClass}`}
-              onClick={() => handlePlace()}
-            >
-              Place
-            </button>
-
+          <div className="flex flex-col items-center space-y-10">
             {game.data().places.length > 0 ? (
               <ul className="border border-slate-900 py-2 px-4 text-center">
                 {game.data().places.map((place, index) => (
-                  <li key={index}>{`${game.data().playersSummary[place].nickname} placed card.`}</li>
+                  <li key={index}>
+                    {game.data().playersSummary[place.player].nickname} 
+                    {place.last ? ` (${place.number})` : null}
+                  </li>
                 ))}
               </ul>
             ) : null}

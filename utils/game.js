@@ -26,16 +26,18 @@ export const findGame = async () => {
 };
 
 export const createGame = async (isPublic = true) => {
-  const createdAt = await getTimestamp();
-
   const docRef = await addDoc(collection(db, 'games'), {
-    public: Boolean(isPublic),
-    status: Number(0),
-    players: Array(),
-    playersSummary: Array(4).fill(null),
-    places: Array(),
-    timerTo: Number(0),
-    createdAt: Number(createdAt)
+    public: isPublic,
+    status: 0,
+    players: [],
+    playersSummary: [
+      null,
+      null,
+      null,
+      null
+    ],
+    places: [],
+    timerTo: 0
   });
 
   return docRef.id;
@@ -74,20 +76,13 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
     return { error: 'The game is full. Cannot join.' };
   }
 
-  let randomNumber;
-  let isNumberUnique = false;
-
-  // Keep generating random numbers until a unique one is found
-  while (!isNumberUnique) {
-    randomNumber = Math.floor(Math.random() * 100) + 1;
-    isNumberUnique = !data.playersSummary.some(player => player && player.number === randomNumber);
-  }
+  let randomNumber = generateCard(data);
 
   // Assign player data to the empty slot
   data.players.push(user?.uid);
   data.playersSummary[emptyPlayerSlotIndex] = {
     nickname,
-    number: randomNumber,
+    numbers: [randomNumber],
     ready: false
   };
 
@@ -143,7 +138,7 @@ export const getGame = (id, setGame, reset) => {
   return unsub;
 };
 
-export const placeCard = async (game, player) => {
+export const placeCard = async (game, player, number) => {
   const id = game.id;
   const data = game.data();
   const docRef = doc(db, 'games', id);
@@ -152,19 +147,53 @@ export const placeCard = async (game, player) => {
 
   if (data.places.includes(playerIndex)) return;
 
-  data.places.push(playerIndex);
+  data.places.push({
+    player: playerIndex,
+    number
+  });
 
-  if (data.places.length === data.players.length) {
+  // Count the total number of elements across all players
+  const totalNumbers = data.playersSummary.filter(player => player !== null).flatMap(player => player.numbers).length;
+
+  if (data.places.length === totalNumbers) {
+    data.places[data.places.length - 1].last = true;
     data.status = ascendingOrder(data) ? 2 : 3;
   }
 
-  // Update game data
   await updateDoc(docRef, data);
 
-  if (data.status > 1) {
+  // Add a delay
+  await new Promise(resolve => setTimeout(resolve, 2500));
+
+  // Win -> upgrade level
+  if (data.status === 2) {
+    data.places = [];
+
+    for (let i = 0; i < data.playersSummary.length; i++) {
+      const player = data.playersSummary[i];
+
+      if (player !== null) {
+        const currentLevel = player.numbers.length;
+        player.numbers = [];
+
+        for (let j = 0; j < currentLevel + 1; j++) {
+          let randomNumber = generateCard(data);
+          player.numbers.push(randomNumber);
+        }
+      }
+    }
+
+    data.timerTo = await getTimestamp() + 60;
+    data.status = 1;
+
+    // Update game data again after the delay
+    await updateDoc(docRef, data);
+  }
+  // Lose -> delete game
+  else if (data.status === 3) {
     await deleteGame(game.id);
   }
-}
+};
 
 export const ready = async (game, player) => {
   const id = game.id;
@@ -187,25 +216,33 @@ export const ready = async (game, player) => {
 }
 
 const ascendingOrder = (data) => {
-  const { playersSummary, places } = data;
-
-  // Check for null values and invalid array length
-  if (!playersSummary || !places || places.length < 2) {
-    return false;
-  }
+  const { places } = data;
 
   for (let i = 1; i < places.length; i++) {
-    // Check for null values in players array
-    if (!playersSummary[places[i - 1]] || !playersSummary[places[i]]) {
+    // Check for null values in array
+    if (!places[i - 1] || !places[i]) {
       return false;
     }
 
-    if (playersSummary[places[i - 1]].number > playersSummary[places[i]].number) {
+    if (places[i - 1].number > places[i].number) {
       return false;
     }
   }
 
   return true;
+}
+
+const generateCard = (data) => {
+  let randomNumber;
+  let isNumberUnique = false;
+
+  // Keep generating random numbers until a unique one is found
+  while (!isNumberUnique) {
+    randomNumber = Math.floor(Math.random() * 100) + 1;
+    isNumberUnique = !data.playersSummary.some(player => player && player.numbers.includes(randomNumber));
+  }
+
+  return randomNumber;
 }
 
 export const deleteGame = async (id) => {
