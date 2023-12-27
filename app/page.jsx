@@ -212,13 +212,13 @@ export default function Home() {
                       className={`border-4 border-red-500 bg-red-500 hover:bg-red-600 ${buttonClass}`}
                       onClick={() => handleAction(1)}
                   >
-                      { loading === 1 ? 'Creating new game...' : 'Start a new game' }
+                      { loading === 1 ? 'Creating new game...' : 'New private game' }
                   </button>
                   <button
                       className={`border-4 border-green-500 bg-green-500 hover:bg-green-600 ${buttonClass}`}
                       onClick={() => handleAction(2)}
                   >
-                      { loading === 2 ? 'Finding game...' : 'Find a game' }
+                      { loading === 2 ? 'Finding game...' : 'Enter matchmaking' }
                   </button>
 
                   <div className="grid grid-cols-2 gap-2 items-center">
@@ -232,7 +232,7 @@ export default function Home() {
                       className={`border-4 border-sky-500 bg-sky-500 hover:bg-sky-600 ${buttonClass}`}
                       onClick={() => handleAction(3)}
                     >
-                      {loading === 3 ? 'Joining game...' : 'Join a game'}
+                      {loading === 3 ? 'Joining game...' : 'Join public game'}
                     </button>
                   </div>
               </div>
@@ -265,7 +265,7 @@ export default function Home() {
             {game.data().playersSummary[player - 1].ready ? 'Unready' : 'Ready'}
           </button>
 
-          <p className="border border-slate-900 py-2 px-4">Game ID: {game.id}</p>
+          <p className="border border-slate-900 py-2 px-4 select-text">Game ID: {game.id}</p>
 
           <div className="text-5xl flex justify-center items-center space-x-4">
             <GoClock />
