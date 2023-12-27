@@ -162,26 +162,8 @@ export const placeCard = async (game, player) => {
   await updateDoc(docRef, data);
 
   if (data.status > 1) {
-    await stopGame(game);
+    await deleteGame(game.id);
   }
-}
-
-export const stopGame = async (game, timeLeft = false) => {
-  const id = game.id;
-  const data = game.data();
-
-  if (timeLeft) {
-    const docRef = doc(db, 'games', id);
-
-    data.status = ascendingOrder(data) ? 2 : 3;
-    
-    // Update game data
-    await updateDoc(docRef, data);
-  }
-
-  setTimeout(async () => {
-    await deleteGame(id);
-  }, 3000);
 }
 
 export const ready = async (game, player) => {
@@ -226,6 +208,6 @@ const ascendingOrder = (data) => {
   return true;
 }
 
-const deleteGame = async (id) => {
+export const deleteGame = async (id) => {
   await deleteDoc(doc(db, 'games', id));
 };

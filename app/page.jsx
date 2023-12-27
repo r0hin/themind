@@ -18,7 +18,7 @@ import {
   startGame,
   getGame,
   placeCard,
-  stopGame,
+  deleteGame,
   ready
 } from '@/utils/game';
 import { getTimestamp } from '@/utils/date';
@@ -158,7 +158,7 @@ export default function Home() {
           if (game.data().status === 0) {
             await startGame(game);
           } else if (game.data().status === 1) { // Time left
-            await stopGame(game, true);
+            await deleteGame(game.id);
           }
 
           clearInterval(interval);
@@ -276,15 +276,7 @@ export default function Home() {
         <div className="space-y-16">
           <h1 className="text-5xl text-center font-black">Place when you feel it's the right time.</h1>
 
-          {game.data().status > 1 ? (
-              game.data().status === 2 ? (
-                <h3 className="text-4xl text-green-500 text-center font-black">You Win</h3>
-              ) : (
-                <h3 className="text-4xl text-red-500 text-center font-black">You Lose</h3>
-              )
-            ) : (
-              <h3 className="text-3xl text-center">Your card is {game.data().playersSummary[player - 1].number}.</h3>
-            )}
+          <h3 className="text-3xl text-center">Your card is {game.data().playersSummary[player - 1].number}.</h3>
 
           <div className="flex flex-col items-center space-y-6">
             <button
