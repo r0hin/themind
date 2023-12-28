@@ -17,7 +17,7 @@ import {
   joinGame,
   startGame,
   getGame,
-  placeCard,
+  placeCardInGame,
   deleteGame,
   ready
 } from '@/utils/game';
@@ -133,7 +133,7 @@ export default function Home() {
   };
 
   const handlePlace = async (number) => {
-    await placeCard(game, player, number);
+    await placeCardInGame(game, player, number);
   };
 
   const reset = () => {
@@ -289,17 +289,26 @@ export default function Home() {
               </h3>
             ))}
           </div>
+          
+          {game.data().status === 2 ? (
+            <h3
+              className="text-3xl text-green-500 text-center"
+            >
+              You've advanced to the next level (Level {game.data().playersSummary[0].numbers.length + 1}).
+            </h3>
+          ) : game.data().status === 3 ? (
+            <h3
+              className="text-3xl text-red-500 text-center"
+            >
+              You've lost the game.
+            </h3>
+          ) : null}
 
           <div className="flex flex-col items-center space-y-10">
             {game.data().places.length > 0 ? (
-              <ul className="border border-slate-900 py-2 px-4 text-center">
-                {game.data().places.map((place, index) => (
-                  <li key={index}>
-                    {game.data().playersSummary[place.player].nickname} 
-                    {place.last ? ` (${place.number})` : null}
-                  </li>
-                ))}
-              </ul>
+              <p className="border border-slate-900 py-2 px-4 text-center">
+                {game.data().playersSummary[game.data().places[game.data().places.length - 1].player].nickname} ({game.data().places[game.data().places.length - 1].number})
+              </p>
             ) : null}
 
             <div className="text-5xl flex justify-center items-center space-x-4">

@@ -138,27 +138,32 @@ export const getGame = (id, setGame, reset) => {
   return unsub;
 };
 
-export const placeCard = async (game, player, number) => {
+export const placeCardInGame = async (game, player, number) => {
   const id = game.id;
   const data = game.data();
   const docRef = doc(db, 'games', id);
 
   const playerIndex = player - 1;
 
+  if (data.status > 1) return;
   if (data.places.includes(playerIndex)) return;
+
+  // Count the total number of elements across all players
+  const totalNumbers = data.playersSummary.filter(player => player !== null).flatMap(player => player.numbers).length;
+
+  if (data.places.length + 1 === totalNumbers) {
+    data.status = 2;
+  }
+  
+  // Check if the last placed card's number is greater than the current placed card's number
+  if (data.places[data.places.length - 1]?.number > number) {
+    data.status = 3;
+  }
 
   data.places.push({
     player: playerIndex,
     number
   });
-
-  // Count the total number of elements across all players
-  const totalNumbers = data.playersSummary.filter(player => player !== null).flatMap(player => player.numbers).length;
-
-  if (data.places.length === totalNumbers) {
-    data.places[data.places.length - 1].last = true;
-    data.status = ascendingOrder(data) ? 2 : 3;
-  }
 
   await updateDoc(docRef, data);
 
@@ -213,23 +218,6 @@ export const ready = async (game, player) => {
 
   // Update game data
   await updateDoc(docRef, data);
-}
-
-const ascendingOrder = (data) => {
-  const { places } = data;
-
-  for (let i = 1; i < places.length; i++) {
-    // Check for null values in array
-    if (!places[i - 1] || !places[i]) {
-      return false;
-    }
-
-    if (places[i - 1].number > places[i].number) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 const generateCard = (data) => {
