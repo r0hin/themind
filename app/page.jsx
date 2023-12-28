@@ -155,7 +155,7 @@ export default function Home() {
     const updateTimer = async () => {
       if (game.data().status < 2) { // No longer decrease the timer if the game is finished (win or lose)
 
-        remainingTime = game.data().timerTo - getTimestamp();
+        remainingTime = game.data().timerTo - await getTimestamp();
         setTimeLeft(remainingTime);
 
         if (remainingTime <= 0) {
