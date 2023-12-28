@@ -91,15 +91,15 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
   // Start the game if there are 4 players
   switch (emptyPlayerSlotIndex) {
     case 1: {
-      data.timerTo = await getTimestamp() + 45;
+      data.timerTo = getTimestamp() + 45;
       break;
     }
     case 2: {
-      data.timerTo = await getTimestamp() + 20;
+      data.timerTo = getTimestamp() + 20;
       break;
     }
     case 3: {
-      data.timerTo = await getTimestamp() + 5;
+      data.timerTo = getTimestamp() + 5;
       break;
     }
   }
@@ -115,7 +115,7 @@ export const startGame = async (game) => {
   const data = game.data();
   const docRef = doc(db, 'games', id);
 
-  data.timerTo = await getTimestamp() + 60;
+  data.timerTo = getTimestamp() + 60;
   data.status = 1;
 
   // Update game data
@@ -188,7 +188,7 @@ export const placeCardInGame = async (game, player, number) => {
       }
     }
 
-    data.timerTo = await getTimestamp() + 60;
+    data.timerTo = getTimestamp() + 60;
     data.status = 1;
 
     // Update game data again after the delay
@@ -212,8 +212,8 @@ export const ready = async (game, player) => {
   // Check if all players are ready
   const allPlayersReady = data.playersSummary.filter(player => player !== null).every(player => player.ready);
 
-  if (allPlayersReady && data.players.length >= 2 && data.timerTo - await getTimestamp() > 10) {
-    data.timerTo = await getTimestamp() + 10;
+  if (allPlayersReady && data.players.length >= 2 && data.timerTo - getTimestamp() > 10) {
+    data.timerTo = getTimestamp() + 10;
   }
 
   // Update game data
