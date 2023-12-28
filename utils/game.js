@@ -155,8 +155,11 @@ export const placeCardInGame = async (game, player, number) => {
     data.status = 2;
   }
   
-  // Check if the last placed card's number is greater than the current placed card's number
-  if (data.places[data.places.length - 1]?.number > number) {
+  // Check if a player has a non-placed card with a number smaller than the current placed one's number
+  const foundInPlayers = data.playersSummary.filter(player => player !== null).some(player => player.numbers.some(num => num < number));
+  const foundInPlaces = data.places.some(place => place.number < number);
+
+  if (foundInPlayers && !foundInPlaces) {
     data.status = 3;
   }
 

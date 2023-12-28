@@ -53,7 +53,7 @@ export default function Home() {
 
   const handleAction = async (type) => {
     if (!user) {
-      notifyError('Anonymous login failed. Refresh or try again later.');
+      notifyError('Logging in, please wait...');
       return;
     }
 
