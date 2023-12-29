@@ -221,7 +221,7 @@ export default function Home() {
                       { loading === 2 ? 'Finding game...' : 'Enter matchmaking' }
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2 items-center">
+                  <div className="grid grid-cols-2 gap-2 mt-8 items-center">
                     <input
                       type="text"
                       placeholder="Game ID"
@@ -232,7 +232,7 @@ export default function Home() {
                       className={`border-4 border-sky-500 bg-sky-500 hover:bg-sky-600 ${buttonClass}`}
                       onClick={() => handleAction(3)}
                     >
-                      {loading === 3 ? 'Joining game...' : 'Join public game'}
+                      {loading === 3 ? 'Joining game...' : 'Join game'}
                     </button>
                   </div>
               </div>
