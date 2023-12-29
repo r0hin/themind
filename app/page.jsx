@@ -196,11 +196,11 @@ export default function Home() {
   return (
     <>
       {game === null ? (
-        <div>
+        <div className='flex flex-col items-center justify-center'>
           <Image src="/logo.png" width="437" height="173" alt="The Mind" className="mx-auto" />
 
           <div className="w-full max-w-[25rem] px-6 mt-16">
-              <div className="flex flex-col space-y-3">
+              <div className="flex flex-col">
                   <input
                       type="text"
                       placeholder="Nickname"
@@ -209,19 +209,19 @@ export default function Home() {
                   />
 
                   <button
-                      className={`border-4 border-red-500 bg-red-500 hover:bg-red-600 ${buttonClass}`}
+                      className={`border-4 border-red-500 mt-2 bg-red-500 hover:bg-red-600 ${buttonClass}`}
                       onClick={() => handleAction(1)}
                   >
                       { loading === 1 ? 'Creating new game...' : 'New private game' }
                   </button>
                   <button
-                      className={`border-4 border-green-500 bg-green-500 hover:bg-green-600 ${buttonClass}`}
+                      className={`border-4 border-green-500 mt-2 bg-green-500 hover:bg-green-600 ${buttonClass}`}
                       onClick={() => handleAction(2)}
                   >
                       { loading === 2 ? 'Finding game...' : 'Enter matchmaking' }
                   </button>
 
-                  <div className="grid grid-cols-2 gap-2 mt-8 items-center">
+                  <div className="grid grid-cols-2 gap-2 mt-12 items-center">
                     <input
                       type="text"
                       placeholder="Game ID"
