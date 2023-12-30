@@ -9,23 +9,33 @@ import {
   getDoc,
   updateDoc,
   onSnapshot,
-  deleteDoc
+  deleteDoc,
 } from 'firebase/firestore';
 
 import { getTimestamp } from './date';
 
 export const findGame = async () => {
   const q = query(collection(db, 'games'), where('status', '==', 0), where('public', '==', true));
+  const timestamp = await getTimestamp();
 
   const querySnapshot = await getDocs(q);
   if (querySnapshot.size > 0) {
-    return querySnapshot.docs[0].id;
+    const { lastUpdate } = querySnapshot.docs[0].data();
+    const { id } = querySnapshot.docs[0];
+    
+    if (timestamp - lastUpdate < 60) {
+      return id;
+    } else {
+      await deleteGame(id);
+    }
   }
 
   return null;
 };
 
 export const createGame = async (isPublic = true) => {
+  const timestamp = await getTimestamp();
+
   const docRef = await addDoc(collection(db, 'games'), {
     public: isPublic,
     status: 0,
@@ -38,15 +48,19 @@ export const createGame = async (isPublic = true) => {
     ],
     places: [],
     timerTo: 0,
-    lastUpdate: 0
+    lastUpdate: timestamp
   });
 
   return docRef.id;
 };
 
+let onlineCheckInterval;
+
 export const joinGame = async (id, nickname, setTimeLeft, user) => {
   const docRef = doc(db, 'games', id);
   const docSnap = await getDoc(docRef);
+
+  const timestamp = await getTimestamp();
 
   if (!docSnap.exists()) {
     return { error: 'Couldn\'t find a game with the provided ID.' };
@@ -89,8 +103,6 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
 
   setTimeLeft(0);
 
-  const timestamp = await getTimestamp();
-
   // Start the game if there are 4 players
   switch (emptyPlayerSlotIndex) {
     case 1: {
@@ -107,28 +119,39 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
     }
   }
 
-  data.lastUpdate = timestamp;
-
   // Update game data
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, {
+    players: data.players,
+    playersSummary: data.playersSummary,
+    timerTo: data.timerTo
+  });
+
+  onlineCheckInterval = setInterval(() => onlineCheck(id), 10 * 1000);
 
   return emptyPlayerSlotIndex + 1;
 };
 
+const onlineCheck = async (id) => {
+  const docRef = doc(db, 'games', id);
+  const timestamp = await getTimestamp();
+
+  // Update game data
+  await updateDoc(docRef, {
+    lastUpdate: timestamp
+  });
+};
+
 export const startGame = async (game) => {
   const id = game.id;
-  const data = game.data();
   const docRef = doc(db, 'games', id);
 
   const timestamp = await getTimestamp();
 
-  data.timerTo = timestamp + 60;
-  data.status = 1;
-
-  data.lastUpdate = timestamp;
-
   // Update game data
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, {
+    timerTo: timestamp + 60,
+    status: 1
+  });
 };
 
 // Get real-time updates for a specific game
@@ -139,7 +162,7 @@ export const getGame = (id, setGame, reset) => {
     if (doc.exists()) {
       setGame(doc);
     } else {
-      reset();
+      reset(onlineCheckInterval);
       unsub();
     }
   });
@@ -205,8 +228,6 @@ export const placeCardInGame = async (game, player, number) => {
     data.timerTo = timestamp + 60;
     data.status = 1;
 
-    data.lastUpdate = timestamp;
-
     // Update game data again after the delay
     await updateDoc(docRef, data);
   }
@@ -234,10 +255,11 @@ export const ready = async (game, player) => {
     data.timerTo = timestamp + 10;
   }
 
-  data.lastUpdate = timestamp;
-
   // Update game data
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, {
+    playersSummary: data.playersSummary,
+    timerTo: data.timerTo
+  });
 }
 
 const generateCard = (data) => {

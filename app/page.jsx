@@ -137,7 +137,7 @@ export default function Home() {
     await placeCardInGame(game, player, number);
   };
 
-  const reset = () => {
+  const reset = (onlineCheckInterval) => {
     setLoading(0);
 
     setJoinId('');
@@ -146,6 +146,8 @@ export default function Home() {
     setGame(null);
 
     setTimeLeft(0);
+
+    clearInterval(onlineCheckInterval);
   };
 
   useEffect(() => {
@@ -175,6 +177,8 @@ export default function Home() {
     if (game !== null && game.data().timerTo !== 0) {
       updateTimer();
       interval = setInterval(updateTimer, 1000);
+    } else {
+      setTimeLeft(0);
     }
 
     // Cleanup function to clear the timer interval
@@ -262,10 +266,10 @@ export default function Home() {
 
         <div className="flex flex-col items-center space-y-10">
           <button
-            className={`border-4 ${game.data().playersSummary[player - 1].ready ? 'border-red-500 bg-red-500 hover:bg-red-600' : 'border-sky-500 bg-sky-500 hover:bg-sky-600'} ${buttonClass}`}
+            className={`border-4 ${game.data().playersSummary[player - 1]?.ready ? 'border-red-500 bg-red-500 hover:bg-red-600' : 'border-sky-500 bg-sky-500 hover:bg-sky-600'} ${buttonClass}`}
             onClick={() => handleReady()}
           >
-            {game.data().playersSummary[player - 1].ready ? 'Unready' : 'Ready'}
+            {game.data().playersSummary[player - 1]?.ready ? 'Unready' : 'Ready'}
           </button>
 
           <p className="border border-slate-900 py-2 px-4 select-text">Game ID: {game.id}</p>
