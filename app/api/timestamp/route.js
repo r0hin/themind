@@ -7,4 +7,4 @@ export async function GET() {
     });
 }
 
-export const revalidate=0
+export const revalidate = 0;

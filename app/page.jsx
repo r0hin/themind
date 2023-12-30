@@ -41,6 +41,7 @@ export default function Home() {
 
   const handleNicknameChange = (e) => {
     setNickname(e.target.value);
+    localStorage.setItem('nickname', nickname);
   };
 
   const handleJoinIdChange = (e) => {
@@ -139,7 +140,6 @@ export default function Home() {
   const reset = () => {
     setLoading(0);
 
-    setNickname('');
     setJoinId('');
 
     setPlayer(null);
@@ -184,6 +184,8 @@ export default function Home() {
   }, [game]);
 
   useEffect(() => {
+    if (localStorage.getItem('nickname') !== null) setNickname(localStorage.getItem('nickname'));
+
     const unsubscribe = subscribeToAuthChanges((newUser) => {
       setUser(newUser);
     });
@@ -206,6 +208,7 @@ export default function Home() {
                       placeholder="Nickname"
                       className={inputClass}
                       onKeyUp={handleNicknameChange}
+                      defaultValue={nickname}
                   />
 
                   <button

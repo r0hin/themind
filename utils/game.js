@@ -37,7 +37,8 @@ export const createGame = async (isPublic = true) => {
       null
     ],
     places: [],
-    timerTo: 0
+    timerTo: 0,
+    lastUpdate: 0
   });
 
   return docRef.id;
@@ -65,9 +66,9 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
   }
 
   // Check if the user's UID is already in the players array
-  if (data.players.includes(user?.uid)) {
+  /*if (data.players.includes(user?.uid)) {
     return { error: 'You are already in this game.' };
-  }
+  }*/
 
   // Find an empty player slot
   const emptyPlayerSlotIndex = data.playersSummary.findIndex(player => player === null);
@@ -88,21 +89,25 @@ export const joinGame = async (id, nickname, setTimeLeft, user) => {
 
   setTimeLeft(0);
 
+  const timestamp = await getTimestamp();
+
   // Start the game if there are 4 players
   switch (emptyPlayerSlotIndex) {
     case 1: {
-      data.timerTo = await getTimestamp() + 45;
+      data.timerTo = timestamp + 45;
       break;
     }
     case 2: {
-      data.timerTo = await getTimestamp() + 20;
+      data.timerTo = timestamp + 20;
       break;
     }
     case 3: {
-      data.timerTo = await getTimestamp() + 5;
+      data.timerTo = timestamp + 5;
       break;
     }
   }
+
+  data.lastUpdate = timestamp;
 
   // Update game data
   await updateDoc(docRef, data);
@@ -115,8 +120,12 @@ export const startGame = async (game) => {
   const data = game.data();
   const docRef = doc(db, 'games', id);
 
-  data.timerTo = await getTimestamp() + 60;
+  const timestamp = await getTimestamp();
+
+  data.timerTo = timestamp + 60;
   data.status = 1;
+
+  data.lastUpdate = timestamp;
 
   // Update game data
   await updateDoc(docRef, data);
@@ -191,8 +200,12 @@ export const placeCardInGame = async (game, player, number) => {
       }
     }
 
-    data.timerTo = await getTimestamp() + 60;
+    const timestamp = await getTimestamp();
+
+    data.timerTo = timestamp + 60;
     data.status = 1;
+
+    data.lastUpdate = timestamp;
 
     // Update game data again after the delay
     await updateDoc(docRef, data);
@@ -204,10 +217,12 @@ export const placeCardInGame = async (game, player, number) => {
 };
 
 export const ready = async (game, player) => {
+  const timestamp = await getTimestamp();
+
   const id = game.id;
   const data = game.data();
   const docRef = doc(db, 'games', id);
-    
+
   const playerIndex = player - 1;
 
   data.playersSummary[playerIndex].ready = !data.playersSummary[playerIndex].ready;
@@ -215,9 +230,11 @@ export const ready = async (game, player) => {
   // Check if all players are ready
   const allPlayersReady = data.playersSummary.filter(player => player !== null).every(player => player.ready);
 
-  if (allPlayersReady && data.players.length >= 2 && data.timerTo - await getTimestamp() > 10) {
-    data.timerTo = await getTimestamp() + 10;
+  if (allPlayersReady && data.players.length >= 2 && data.timerTo - timestamp > 10) {
+    data.timerTo = timestamp + 10;
   }
+
+  data.lastUpdate = timestamp;
 
   // Update game data
   await updateDoc(docRef, data);
